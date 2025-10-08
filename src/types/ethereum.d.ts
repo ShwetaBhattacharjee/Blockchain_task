@@ -1,6 +1,3 @@
-// types/ethereum.d.ts
-// Add this file to properly type window.ethereum
-
 interface Window {
   ethereum?: {
     isMetaMask?: boolean

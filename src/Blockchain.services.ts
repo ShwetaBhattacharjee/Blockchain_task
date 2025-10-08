@@ -2,7 +2,7 @@
 Date: 06-10-2025*/
 import { setGlobalState, setAlert } from './store'
 
-// Extend Window interface for ethereum
+
 declare global {
   interface Window {
     ethereum?: any
@@ -11,9 +11,7 @@ declare global {
 
 const { ethereum } = window
 
-/**
- * Connect wallet - Opens MetaMask and requests account access
- */
+
 export const connectWallet = async (): Promise<void> => {
   try {
     if (!ethereum) {

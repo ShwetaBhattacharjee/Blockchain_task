@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   User,
   Wallet,
@@ -9,11 +9,53 @@ import {
   Shield,
 } from "lucide-react";
 import { mockUser, mockMarketData } from "../data/mockData";
-import { useGlobalState, setGlobalState, truncate } from "../store";
+import { useGlobalState, setGlobalState } from "../store";
 import { disconnectWallet } from "../Blockchain.services";
 
 export const DashboardPage: React.FC = () => {
   const [connectedAccount] = useGlobalState("connectedAccount");
+  const [balance, setBalance] = useState<string>("0");
+
+  // Fetch balance when account connects or changes
+  useEffect(() => {
+    const fetchBalance = async () => {
+      if (connectedAccount && window.ethereum) {
+        try {
+          // Get current chain ID
+          const chainId = await window.ethereum.request({
+            method: "eth_chainId",
+          });
+
+          console.log("Connected to chain:", chainId);
+          console.log("Fetching balance for:", connectedAccount);
+
+          const balanceWei = await window.ethereum.request({
+            method: "eth_getBalance",
+            params: [connectedAccount, "latest"],
+          });
+
+          console.log("Balance (Wei):", balanceWei);
+
+          // Convert from Wei to ETH
+          const balanceEth = (parseInt(balanceWei, 16) / 1e18).toFixed(4);
+          setBalance(balanceEth);
+
+          console.log("Balance (ETH):", balanceEth);
+        } catch (error) {
+          console.error("Error fetching balance:", error);
+          setBalance("0");
+        }
+      } else {
+        setBalance("0");
+      }
+    };
+
+    fetchBalance();
+
+    // Refresh balance every 10 seconds
+    const interval = setInterval(fetchBalance, 10000);
+    return () => clearInterval(interval);
+  }, [connectedAccount]);
 
   const handleConnectWallet = () => {
     setGlobalState("walletModal", "scale-100");
@@ -220,6 +262,17 @@ export const DashboardPage: React.FC = () => {
                   <div className="text-sm text-gray-600 break-all bg-gray-50 p-3 rounded-lg font-mono">
                     {connectedAccount}
                   </div>
+
+                  {/* Balance Display */}
+                  <div className="bg-gradient-to-r from-blue-50 to-emerald-50 p-4 rounded-lg border border-blue-100">
+                    <p className="text-xs text-gray-600 mb-1 font-medium">
+                      Account Balance
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {balance} ETH
+                    </p>
+                  </div>
+
                   <button
                     onClick={handleDisconnectWallet}
                     className="w-full border border-red-300 text-red-600 hover:bg-red-50 py-2 px-4 rounded-lg transition-colors"
